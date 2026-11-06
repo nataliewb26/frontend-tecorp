@@ -1,0 +1,29 @@
+﻿.site-footer {
+  padding: 38px 6%;
+  background: #0b1220;
+  color: #d5deea;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+}
+
+.footer-brand {
+  color: #00d9ff;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.site-footer p {
+  color: #9baabd;
+  font-size: 13px;
+}
+
+.site-footer small {
+  width: 100%;
+  color: #8290a3;
+  border-top: 1px solid #263449;
+  padding-top: 18px;
+}
+

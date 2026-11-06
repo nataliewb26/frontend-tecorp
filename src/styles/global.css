@@ -1,0 +1,135 @@
+﻿#root {
+  min-height: 100vh;
+}
+
+:root {
+  --navy: #0b1424;
+  --navy-soft: #14243a;
+  --blue: #1769e8;
+  --cyan: #00c8ef;
+  --muted: #748196;
+  --line: #e7ebf1;
+}
+
+
+.page-container {
+  min-height: 65vh;
+  padding: 55px 6%;
+  background: #f3f6fa;
+}
+
+.page-card,
+.form-card {
+  width: min(100%, 620px);
+  margin: 25px auto;
+  padding: 38px;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 12px 40px rgba(11, 18, 32, .08);
+}
+
+.page-card h1,
+.form-card h1,
+.admin-heading h1 {
+  margin: 12px 0;
+  color: #0b1220;
+  font-size: clamp(27px, 4vw, 38px);
+}
+
+.page-card p,
+.form-card p,
+.admin-heading p {
+  color: #667085;
+  line-height: 1.7;
+}
+
+.eyebrow {
+  color: #1684a5;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.form-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  margin-top: 25px;
+}
+
+.form-card label {
+  color: #263449;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.form-card input {
+  width: 100%;
+  padding: 13px 14px;
+  border: 1px solid #d7deea;
+  border-radius: 9px;
+  background: #fff;
+  color: #0b1220;
+  font: inherit;
+  outline: none;
+}
+
+.form-card input:focus {
+  border-color: #00a9d0;
+  box-shadow: 0 0 0 3px rgba(0, 217, 255, .12);
+}
+
+.primary-button {
+  min-height: 46px;
+  margin-top: 12px;
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 9px;
+  background: #14243a;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  text-decoration: none;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .2s ease, transform .2s ease;
+}
+
+.primary-button:hover {
+  background: #087eaa;
+  transform: translateY(-1px);
+}
+
+.form-bottom {
+  margin-top: 22px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.form-bottom a {
+  color: #087eaa;
+  font-weight: 700;
+}
+
+.confirmation-card {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+

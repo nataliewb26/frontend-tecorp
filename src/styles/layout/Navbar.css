@@ -1,0 +1,62 @@
+﻿/* ===== NAVEGACIÓN Y PÁGINAS INTERNAS ===== */
+
+.site-navbar {
+  min-height: 76px;
+  padding: 14px 6%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  background: #0b1220;
+  color: #fff;
+}
+
+.brand-logo {
+  color: #fff;
+  text-decoration: none;
+  font-size: 23px;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+
+.brand-logo span {
+  color: #00d9ff;
+}
+
+.brand-logo small {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 4px;
+  color: #9baabd;
+}
+
+.navbar-links,
+.navbar-actions,
+.footer-links {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.navbar-links a,
+.navbar-actions a,
+.footer-links a {
+  color: inherit;
+  text-decoration: none;
+  font-size: 14px;
+  transition: color .2s ease;
+}
+
+.navbar-links a:hover,
+.navbar-actions a:hover,
+.footer-links a:hover,
+.navbar-links a.active {
+  color: #00d9ff;
+}
+
+.navbar-actions a {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+

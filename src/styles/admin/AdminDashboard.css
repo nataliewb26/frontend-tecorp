@@ -1,0 +1,183 @@
+﻿/* =========================================
+   ADMINISTRACIÓN - DASHBOARD
+   Identidad visual Hybrid Tech
+========================================= */
+
+.admin-page {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 70vh;
+  padding: 55px 6%;
+  background: #0b1424;
+  color: #f8fafc;
+}
+
+/* Encabezado */
+.admin-page .admin-heading {
+  margin-bottom: 35px;
+}
+
+.admin-page .admin-heading .eyebrow {
+  color: #00d9ff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.admin-page .admin-heading h1 {
+  margin: 12px 0;
+  color: #ffffff;
+  font-size: clamp(27px, 4vw, 38px);
+  font-weight: 800;
+}
+
+.admin-page .admin-heading p {
+  margin: 0;
+  color: #aab8ca;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+/* Distribución de módulos */
+.admin-page .admin-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+  margin: 35px 0;
+}
+
+/* Tarjetas */
+.admin-page .admin-module {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  min-height: 205px;
+  padding: 26px;
+  border: 1px solid #2b4058;
+  border-radius: 14px;
+  background: #15283e;
+  color: #f8fafc;
+  transition: transform 0.25s ease,
+              border-color 0.25s ease,
+              box-shadow 0.25s ease;
+}
+
+.admin-page .admin-module:hover {
+  transform: translateY(-4px);
+  border-color: #00c8ef;
+  box-shadow: 0 12px 28px rgba(0, 200, 239, 0.09);
+}
+
+/* Iconos */
+.admin-page .admin-module > svg {
+  margin-bottom: 17px;
+  color: #00d9ff;
+}
+
+/* Títulos */
+.admin-page .admin-module h2 {
+  margin: 0 0 10px;
+  color: #ffffff;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+/* Descripciones */
+.admin-page .admin-module p {
+  min-height: 45px;
+  margin: 0 0 20px;
+  color: #b8c7d9;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+/* Enlaces de los módulos */
+.admin-page .admin-module .admin-module-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  color: #35d9ff;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: color 0.2s ease, gap 0.2s ease;
+}
+
+.admin-page .admin-module .admin-module-link:hover {
+  gap: 13px;
+  color: #ffffff;
+}
+
+/* Volver a la tienda */
+.admin-page .back-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+  padding: 11px 19px;
+  border: 1px solid #344a63;
+  border-radius: 9px;
+  background: #15283e;
+  color: #dce8f5;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.25s ease;
+}
+
+.admin-page .back-link:hover {
+  border-color: #00d9ff;
+  background: #1b3651;
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 800px) {
+  .admin-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .site-navbar {
+    flex-wrap: wrap;
+  }
+
+  .navbar-links {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 520px) {
+  .page-container {
+    padding: 30px 5%;
+  }
+
+  .page-card,
+  .form-card {
+    padding: 24px 19px;
+  }
+
+  .admin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .navbar-links,
+  .navbar-actions {
+    gap: 13px;
+  }
+
+  .navbar-links a,
+  .navbar-actions a {
+    font-size: 12px;
+  }
+
+  .site-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
