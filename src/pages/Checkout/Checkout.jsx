@@ -10,13 +10,15 @@ import {
 import { useCart } from "../../context/CartContext";
 import { crearPedido } from "../../services/pedidoService";
 import { getProducto } from "../../services/productService";
+import { formatMoneyWithCents as money } from "../../utils/formatters";
 
-const money = (value) =>
-  new Intl.NumberFormat("es-PE", {
-    style: "currency",
-    currency: "PEN",
-    maximumFractionDigits: 2,
-  }).format(Number(value) || 0);
+// [SIN USO] Formateador duplicado; se usa formatMoneyWithCents compartido.
+// const money = (value) =>
+//   new Intl.NumberFormat("es-PE", {
+//     style: "currency",
+//     currency: "PEN",
+//     maximumFractionDigits: 2,
+//   }).format(Number(value) || 0);
 
 function groupDetails(details = []) {
   return details.reduce((grouped, detail) => {

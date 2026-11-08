@@ -4,9 +4,10 @@ export function listar() {
   return apiRequest("/categorias");
 }
 
-export function obtener(id) {
-  return apiRequest(`/categorias/${encodeURIComponent(id)}`);
-}
+// [SIN USO] Ningún componente solicita una categoría individual; se usa listar().
+// export function obtener(id) {
+//   return apiRequest(`/categorias/${encodeURIComponent(id)}`);
+// }
 
 export function crear(data) {
   return apiRequest("/categorias", {

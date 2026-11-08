@@ -17,7 +17,9 @@ function clearStoredSession() {
   window.dispatchEvent(new Event("tecorp:session-cleared"));
 }
 
-export class ApiError extends Error {
+// [SIN USO] Export público redundante; la clase solo se usa dentro de este módulo.
+// export class ApiError extends Error {
+class ApiError extends Error {
   constructor(message, { status, detalles = [] } = {}) {
     super(message);
     this.name = "ApiError";

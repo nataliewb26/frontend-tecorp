@@ -1,3 +1,6 @@
+/* [SIN USO] Hoja monolítica sin importadores; main.jsx carga las hojas modulares equivalentes.
+   CONTENIDO ORIGINAL COMENTADO:
+
 #root {
   min-height: 100vh;
 }
@@ -1138,7 +1141,7 @@
   .footer-bottom { align-items: flex-start; flex-direction: column; justify-content: center; padding: 15px 0; }
 }
 
-/* ===== NAVEGACIÓN Y PÁGINAS INTERNAS ===== */
+[Comentario original: ===== NAVEGACIÓN Y PÁGINAS INTERNAS =====]
 
 .site-navbar {
   min-height: 76px;
@@ -1350,10 +1353,9 @@
 }
 
 
-/* =========================================
+[Comentario original:
    ADMINISTRACIÓN - DASHBOARD
-   Identidad visual Hybrid Tech
-========================================= */
+   Identidad visual Hybrid Tech]
 
 .admin-page {
   box-sizing: border-box;
@@ -1364,7 +1366,7 @@
   color: #f8fafc;
 }
 
-/* Encabezado */
+[Comentario original: Encabezado]
 .admin-page .admin-heading {
   margin-bottom: 35px;
 }
@@ -1390,7 +1392,7 @@
   line-height: 1.7;
 }
 
-/* Distribución de módulos */
+[Comentario original: Distribución de módulos]
 .admin-page .admin-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1398,7 +1400,7 @@
   margin: 35px 0;
 }
 
-/* Tarjetas */
+[Comentario original: Tarjetas]
 .admin-page .admin-module {
   box-sizing: border-box;
   display: flex;
@@ -1422,13 +1424,13 @@
   box-shadow: 0 12px 28px rgba(0, 200, 239, 0.09);
 }
 
-/* Iconos */
+[Comentario original: Iconos]
 .admin-page .admin-module > svg {
   margin-bottom: 17px;
   color: #00d9ff;
 }
 
-/* Títulos */
+[Comentario original: Títulos]
 .admin-page .admin-module h2 {
   margin: 0 0 10px;
   color: #ffffff;
@@ -1436,7 +1438,7 @@
   font-weight: 700;
 }
 
-/* Descripciones */
+[Comentario original: Descripciones]
 .admin-page .admin-module p {
   min-height: 45px;
   margin: 0 0 20px;
@@ -1445,7 +1447,7 @@
   line-height: 1.7;
 }
 
-/* Enlaces de los módulos */
+[Comentario original: Enlaces de los módulos]
 .admin-page .admin-module .admin-module-link {
   display: inline-flex;
   align-items: center;
@@ -1463,7 +1465,7 @@
   color: #ffffff;
 }
 
-/* Volver a la tienda */
+[Comentario original: Volver a la tienda]
 .admin-page .back-link {
   display: inline-flex;
   align-items: center;
@@ -1533,10 +1535,9 @@
   }
 }
 
-/* =========================================
+[Comentario original:
    GESTIÓN DE PRODUCTOS - ADMIN
-   Identidad visual Hybrid Tech
-========================================= */
+   Identidad visual Hybrid Tech]
 
 .product-admin-toolbar {
   display: flex;
@@ -1880,7 +1881,7 @@
   margin-top: 8px;
 }
 
-/* MODAL DE PRODUCTOS */
+[Comentario original: MODAL DE PRODUCTOS]
 
 .product-modal-backdrop {
   position: fixed;
@@ -2016,7 +2017,7 @@
   outline-offset: 3px;
 }
 
-/* RESPONSIVE */
+[Comentario original: RESPONSIVE]
 
 @media (max-width: 950px) {
   .product-admin-summary {
@@ -2095,7 +2096,7 @@
 }
 
 
-/* CHECKOUT */
+[Comentario original: CHECKOUT]
 .checkout-heading {
   margin: 20px 0 28px;
 }
@@ -2266,7 +2267,7 @@
   color: #64748b;
 }
 
-/* CONFIRMACIÓN DEL PEDIDO */
+[Comentario original: CONFIRMACIÓN DEL PEDIDO]
 .confirmation-card {
   max-width: 650px;
   margin: 30px auto;
@@ -2361,7 +2362,7 @@
 }
 
 
-/* BOTÓN SECUNDARIO: SEGUIR COMPRANDO */
+[Comentario original: BOTÓN SECUNDARIO: SEGUIR COMPRANDO]
 .back-link {
   display: inline-flex;
   align-items: center;
@@ -2399,7 +2400,7 @@
 }
 
 
-/* GESTIÓN DE PEDIDOS - ADMIN */
+[Comentario original: GESTIÓN DE PEDIDOS - ADMIN]
 .admin-orders {
   width: 100%;
   padding: 28px 0 50px;
@@ -2644,7 +2645,7 @@
   line-height: 1.6;
 }
 
-/* DETALLE DEL PEDIDO */
+[Comentario original: DETALLE DEL PEDIDO]
 .admin-order-modal-backdrop {
   position: fixed;
   z-index: 1000;
@@ -2793,4 +2794,4 @@
   }
 }
 
-
+*/

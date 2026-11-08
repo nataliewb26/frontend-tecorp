@@ -1,6 +1,8 @@
 import { apiRequest } from "./api";
 
-export function mapProducto(producto) {
+// [SIN USO] Export público redundante; el adaptador solo se usa dentro de este módulo.
+// export function mapProducto(producto) {
+function mapProducto(producto) {
   if (!producto) return null;
 
   return {

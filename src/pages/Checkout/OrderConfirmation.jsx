@@ -1,13 +1,15 @@
 
 import { Link, useLocation } from "react-router-dom";
 import { CheckCircle2, Package, ArrowRight } from "lucide-react";
+import { formatMoneyWithCents as money } from "../../utils/formatters";
 
-const money = (value) =>
-  new Intl.NumberFormat("es-PE", {
-    style: "currency",
-    currency: "PEN",
-    maximumFractionDigits: 2,
-  }).format(Number(value) || 0);
+// [SIN USO] Formateador duplicado; se usa formatMoneyWithCents compartido.
+// const money = (value) =>
+//   new Intl.NumberFormat("es-PE", {
+//     style: "currency",
+//     currency: "PEN",
+//     maximumFractionDigits: 2,
+//   }).format(Number(value) || 0);
 
 export default function OrderConfirmation() {
   const { state } = useLocation();

@@ -3,14 +3,16 @@ import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, ShoppingCart } from "lucide-react";
 import { useCart } from "../../context/CartContext";
 import { getProducto } from "../../services/productService";
+import { formatMoneyWithCents as money } from "../../utils/formatters";
 
 const FALLBACK_IMAGE = "/product-placeholder.svg";
-const money = (value) =>
-  new Intl.NumberFormat("es-PE", {
-    style: "currency",
-    currency: "PEN",
-    maximumFractionDigits: 2,
-  }).format(Number(value) || 0);
+// [SIN USO] Formateador duplicado; se usa formatMoneyWithCents compartido.
+// const money = (value) =>
+//   new Intl.NumberFormat("es-PE", {
+//     style: "currency",
+//     currency: "PEN",
+//     maximumFractionDigits: 2,
+//   }).format(Number(value) || 0);
 
 export default function ProductDetail() {
   const { id } = useParams();

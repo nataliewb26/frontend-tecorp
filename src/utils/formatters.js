@@ -6,6 +6,14 @@ export function formatMoney(value) {
   }).format(Number(value) || 0);
 }
 
+export function formatMoneyWithCents(value) {
+  return new Intl.NumberFormat("es-PE", {
+    style: "currency",
+    currency: "PEN",
+    maximumFractionDigits: 2,
+  }).format(Number(value) || 0);
+}
+
 export function formatDate(value) {
   const date = new Date(value);
 

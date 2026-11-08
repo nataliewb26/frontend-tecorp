@@ -88,6 +88,7 @@
   font-weight: 800;
 }
 
+/* [SIN USO] Iconos de resumen sin referencia en los componentes de administración.
 .product-summary-icon {
   width: 37px;
   height: 37px;
@@ -108,6 +109,7 @@
   background: #dc262625;
   color: #f87171;
 }
+*/
 
 .product-admin-panel {
   overflow: hidden;
@@ -138,6 +140,7 @@
   font-size: 12px;
 }
 
+/* [SIN USO] Contenedor de filtros retirado al conectar el inventario con la API.
 .product-admin-filters {
   display: flex;
   align-items: flex-end;
@@ -176,6 +179,7 @@
   border-color: #00c8ef;
   box-shadow: 0 0 0 3px rgba(0, 217, 255, .10);
 }
+*/
 
 .product-clear-filters {
   min-height: 40px;
@@ -503,6 +507,7 @@
     width: 100%;
   }
 
+  /* [SIN USO] Reglas responsive del contenedor de filtros retirado.
   .product-admin-filters {
     align-items: stretch;
     flex-direction: column;
@@ -511,6 +516,7 @@
   .product-admin-filters label {
     min-width: 0;
   }
+  */
 
   .product-clear-filters {
     width: 100%;

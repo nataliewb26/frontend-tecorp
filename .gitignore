@@ -14,6 +14,7 @@ node_modules
 dist
 dist-ssr
 *.local
+src/App.jsx.respaldo-20261106-154844
 
 # Editor directories and files
 .vscode/*

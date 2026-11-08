@@ -96,6 +96,7 @@
   border-bottom: 1px solid #263b53;
 }
 
+/* [SIN USO] Buscador retirado; la API de pedidos solo expone filtro por estado.
 .admin-orders-search {
   display: flex;
   align-items: center;
@@ -123,6 +124,7 @@
 .admin-orders-search input::placeholder {
   color: #8294aa;
 }
+*/
 
 .admin-orders-toolbar > select,
 .admin-status-select {
@@ -244,6 +246,7 @@
 }
 
 /* DETALLE DEL PEDIDO */
+/* [SIN USO] El detalle ahora se expande en la tabla y ya no usa un modal.
 .admin-order-modal-backdrop {
   position: fixed;
   z-index: 1000;
@@ -297,6 +300,7 @@
   border-color: #00d9ff;
   color: #00d9ff;
 }
+*/
 
 .admin-order-customer,
 .admin-order-products {
@@ -324,8 +328,9 @@
   color: #fff;
 }
 
-.admin-order-product,
-.admin-order-modal-total {
+/* [SIN USO] Selector modal-total retirado; las líneas de producto siguen activas. */
+/* .admin-order-modal-total, */
+.admin-order-product {
   display: flex;
   justify-content: space-between;
   gap: 15px;
@@ -337,11 +342,13 @@
   border-bottom: 0;
 }
 
-.admin-order-product strong,
-.admin-order-modal-total strong {
+/* [SIN USO] Selector strong de modal-total retirado. */
+/* .admin-order-modal-total strong, */
+.admin-order-product strong {
   white-space: nowrap;
 }
 
+/* [SIN USO] Total y botón pertenecían al modal de detalle retirado.
 .admin-order-modal-total {
   margin-top: 15px;
   border-bottom: 0;
@@ -358,6 +365,7 @@
   justify-content: center;
   margin-top: 15px;
 }
+*/
 
 @media (max-width: 850px) {
   .admin-order-stats {
@@ -368,9 +376,11 @@
     flex-direction: column;
   }
 
+  /* [SIN USO] Ajuste responsive del buscador retirado.
   .admin-orders-search {
     max-width: none;
   }
+  */
 }
 
 @media (max-width: 560px) {
@@ -387,9 +397,11 @@
     grid-template-columns: 1fr;
   }
 
+  /* [SIN USO] Ajuste responsive del modal retirado.
   .admin-order-modal {
     padding: 18px;
   }
+  */
 }
 
 
