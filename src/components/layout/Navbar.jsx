@@ -1,5 +1,5 @@
 import { Link, NavLink } from "react-router-dom";
-import { ShoppingBag, UserRound, LogOut } from "lucide-react";
+import { ShoppingBag, UserRound, LogOut, ClipboardList } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
 export default function Navbar() {
@@ -22,6 +22,10 @@ export default function Navbar() {
         {estaAutenticado ? (
           <>
             <span>{usuario.nombre}</span>
+            <NavLink to="/mis-pedidos" aria-label="Ver mis pedidos">
+              <ClipboardList size={20} />
+              <span>Mis pedidos</span>
+            </NavLink>
             <button
               type="button"
               onClick={logout}

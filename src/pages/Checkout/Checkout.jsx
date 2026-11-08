@@ -1,15 +1,15 @@
-
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import {
-  ShoppingBag,
   ArrowRight,
   Minus,
   Plus,
+  ShoppingBag,
   Trash2,
-  ShoppingCart,
 } from "lucide-react";
 import { useCart } from "../../context/CartContext";
+import { crearPedido } from "../../services/pedidoService";
+import { getProducto } from "../../services/productService";
 
 const money = (value) =>
   new Intl.NumberFormat("es-PE", {
@@ -17,6 +17,17 @@ const money = (value) =>
     currency: "PEN",
     maximumFractionDigits: 2,
   }).format(Number(value) || 0);
+
+function groupDetails(details = []) {
+  return details.reduce((grouped, detail) => {
+    if (!detail?.campo || !detail?.mensaje) return grouped;
+    const field = detail.campo.startsWith("items") ? "items" : detail.campo;
+    return {
+      ...grouped,
+      [field]: [...(grouped[field] || []), detail.mensaje],
+    };
+  }, {});
+}
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -26,78 +37,96 @@ export default function Checkout() {
     updateQuantity,
     removeFromCart,
     clearCart,
+    syncCartProducts,
   } = useCart();
 
   const [form, setForm] = useState({
     fullName: "",
     email: "",
     phone: "",
-    address: "",
+    direccion_envio: "",
     district: "",
     paymentMethod: "Contra entrega",
     notes: "",
   });
-
+  const [fieldErrors, setFieldErrors] = useState({});
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [completed, setCompleted] = useState(false);
 
   function handleChange(event) {
     const { name, value } = event.target;
     setForm((current) => ({ ...current, [name]: value }));
+    setFieldErrors((current) => ({ ...current, [name]: [] }));
   }
 
-  function handleSubmit(event) {
-    event.preventDefault();
-    setError("");
-
-    if (cart.length === 0) {
-      setError("Tu carrito está vacío. Agrega productos antes de continuar.");
-      return;
-    }
-
-    const order = {
-      id: `TEC-${Date.now().toString().slice(-8)}`,
-      date: new Date().toISOString(),
-      customer: { ...form },
-      items: cart.map((item) => ({ ...item })),
-      subtotal,
-      total: subtotal,
-      status: "Pendiente",
-      paymentMethod: form.paymentMethod,
-    };
-
-    // Registro temporal para la demostración frontend.
-    // Más adelante se reemplazará por la petición al backend.
-    try {
-      const savedOrders = JSON.parse(
-        localStorage.getItem("tecorp_orders") || "[]"
-      );
-
-      localStorage.setItem(
-        "tecorp_orders",
-        JSON.stringify([order, ...savedOrders])
-      );
-    } catch {
-      setError("No se pudo preparar el pedido. Inténtalo nuevamente.");
-      return;
-    }
-
-    clearCart();
-    navigate("/pedido-confirmado", { state: { order } });
-  }
-
-  if (cart.length === 0) {
-    return (
-      <section className="page-container">
-        <div className="page-card empty-checkout">
-          <ShoppingCart size={48} />
-          <h1>Tu carrito está vacío</h1>
-          <p>Agrega productos a tu carrito para poder finalizar tu compra.</p>
-          <Link to="/" className="primary-button">
-            Ir a la tienda <ArrowRight size={18} />
-          </Link>
-        </div>
-      </section>
+  async function refreshCartStock() {
+    const results = await Promise.allSettled(
+      cart.map((item) => getProducto(item.id))
     );
+    const refreshedProducts = results
+      .filter((result) => result.status === "fulfilled")
+      .map((result) => result.value);
+
+    if (refreshedProducts.length > 0) {
+      syncCartProducts(refreshedProducts);
+    }
+  }
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    if (submitting) return;
+
+    setError("");
+    setFieldErrors({});
+
+    const direccionEnvio = form.direccion_envio.trim();
+
+    if (direccionEnvio.length < 10 || direccionEnvio.length > 300) {
+      setFieldErrors({
+        direccion_envio: [
+          "La dirección de envío debe tener entre 10 y 300 caracteres.",
+        ],
+      });
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const order = await crearPedido({
+        direccion_envio: direccionEnvio,
+        items: cart.map((item) => ({
+          producto_id: item.id,
+          cantidad: item.quantity,
+        })),
+      });
+
+      setCompleted(true);
+      clearCart();
+      navigate("/pedido-confirmado", { replace: true, state: { order } });
+    } catch (requestError) {
+      if (requestError.status === 401) {
+        navigate("/login", {
+          replace: true,
+          state: { from: "/checkout" },
+        });
+        return;
+      }
+
+      setError(requestError.message || "No se pudo registrar el pedido.");
+      setFieldErrors(groupDetails(requestError.detalles));
+
+      if (requestError.status === 409) {
+        await refreshCartStock();
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  if (cart.length === 0 && !completed) {
+    return <Navigate to="/#catalogo" replace />;
   }
 
   return (
@@ -105,14 +134,14 @@ export default function Checkout() {
       <div className="checkout-heading">
         <span className="eyebrow">TECORP STORE / COMPRA</span>
         <h1>Finalizar compra</h1>
-        <p>Completa tus datos y revisa tu pedido antes de confirmarlo.</p>
+        <p>Completa la dirección y revisa tu pedido antes de confirmarlo.</p>
       </div>
 
       <div className="checkout-layout">
-        <form className="form-card checkout-card" onSubmit={handleSubmit}>
+        <form className="form-card checkout-card" onSubmit={handleSubmit} noValidate>
           <h2>Datos de entrega</h2>
 
-          <label htmlFor="fullName">Nombre completo</label>
+          <label htmlFor="fullName">Nombre completo (opcional)</label>
           <input
             id="fullName"
             name="fullName"
@@ -120,10 +149,9 @@ export default function Checkout() {
             onChange={handleChange}
             placeholder="Nombre y apellidos"
             autoComplete="name"
-            required
           />
 
-          <label htmlFor="email">Correo electrónico</label>
+          <label htmlFor="email">Correo electrónico (opcional)</label>
           <input
             id="email"
             name="email"
@@ -132,10 +160,9 @@ export default function Checkout() {
             onChange={handleChange}
             placeholder="correo@ejemplo.com"
             autoComplete="email"
-            required
           />
 
-          <label htmlFor="phone">Teléfono</label>
+          <label htmlFor="phone">Teléfono (opcional)</label>
           <input
             id="phone"
             name="phone"
@@ -144,29 +171,34 @@ export default function Checkout() {
             onChange={handleChange}
             placeholder="Número de contacto"
             autoComplete="tel"
-            pattern="[0-9+ ()-]{7,20}"
-            required
           />
 
-          <label htmlFor="address">Dirección de entrega</label>
-          <input
-            id="address"
-            name="address"
-            value={form.address}
+          <label htmlFor="shipping-address">Dirección de envío</label>
+          <textarea
+            id="shipping-address"
+            name="direccion_envio"
+            value={form.direccion_envio}
             onChange={handleChange}
-            placeholder="Dirección completa"
+            placeholder="Dirección completa, distrito, ciudad y referencias"
             autoComplete="street-address"
+            minLength="10"
+            maxLength="300"
+            rows="3"
             required
           />
+          {(fieldErrors.direccion_envio || []).map((message) => (
+            <p className="checkout-error" role="alert" key={message}>
+              {message}
+            </p>
+          ))}
 
-          <label htmlFor="district">Distrito / Ciudad</label>
+          <label htmlFor="district">Distrito / Ciudad (opcional)</label>
           <input
             id="district"
             name="district"
             value={form.district}
             onChange={handleChange}
-            placeholder="Ej. Lima, Los Olivos"
-            required
+            placeholder="Dato decorativo; inclúyelo también en la dirección"
           />
 
           <label htmlFor="paymentMethod">Método de pago</label>
@@ -175,13 +207,11 @@ export default function Checkout() {
             name="paymentMethod"
             value={form.paymentMethod}
             onChange={handleChange}
-            required
           >
             <option value="Contra entrega">Pago contra entrega</option>
-            <option value="Transferencia bancaria">
-              Transferencia bancaria
-            </option>
+            <option value="Transferencia bancaria">Transferencia bancaria</option>
           </select>
+          <p className="checkout-note">Pago simulado</p>
 
           <label htmlFor="notes">Indicaciones adicionales (opcional)</label>
           <textarea
@@ -189,21 +219,23 @@ export default function Checkout() {
             name="notes"
             value={form.notes}
             onChange={handleChange}
-            placeholder="Referencias para encontrar tu dirección..."
+            placeholder="Este campo es decorativo y no se envía al servidor"
             rows="3"
           />
 
-          {error && <p className="checkout-error">{error}</p>}
+          {error && <p className="checkout-error" role="alert">{error}</p>}
 
-          <button className="primary-button checkout-submit" type="submit">
+          <button
+            className="primary-button checkout-submit"
+            type="submit"
+            disabled={submitting}
+          >
             <ShoppingBag size={18} />
-            Confirmar pedido
-            <ArrowRight size={18} />
+            {submitting ? "Registrando pedido..." : "Confirmar pedido"}
+            {!submitting && <ArrowRight size={18} />}
           </button>
 
-          <Link to="/" className="back-link">
-            Seguir comprando
-          </Link>
+          <Link to="/#catalogo" className="back-link">Seguir comprando</Link>
         </form>
 
         <aside className="checkout-summary">
@@ -220,9 +252,8 @@ export default function Checkout() {
                     <button
                       type="button"
                       aria-label={`Disminuir cantidad de ${item.name}`}
-                      onClick={() =>
-                        updateQuantity(item.id, item.quantity - 1)
-                      }
+                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      disabled={submitting}
                     >
                       <Minus size={14} />
                     </button>
@@ -230,10 +261,8 @@ export default function Checkout() {
                     <button
                       type="button"
                       aria-label={`Aumentar cantidad de ${item.name}`}
-                      onClick={() =>
-                        updateQuantity(item.id, item.quantity + 1)
-                      }
-                      disabled={item.quantity >= Number(item.stock)}
+                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      disabled={submitting || item.quantity >= Number(item.stock)}
                     >
                       <Plus size={14} />
                     </button>
@@ -242,10 +271,12 @@ export default function Checkout() {
                       className="checkout-remove"
                       aria-label={`Eliminar ${item.name}`}
                       onClick={() => removeFromCart(item.id)}
+                      disabled={submitting}
                     >
                       <Trash2 size={15} />
                     </button>
                   </div>
+                  <small>Stock disponible: {item.stock}</small>
                 </div>
 
                 <strong className="checkout-item-price">
@@ -255,20 +286,22 @@ export default function Checkout() {
             ))}
           </div>
 
+          {(fieldErrors.items || []).map((message) => (
+            <p className="checkout-error" role="alert" key={message}>
+              {message}
+            </p>
+          ))}
+
           <div className="checkout-total">
-            <span>Subtotal</span>
+            <span>Subtotal estimado</span>
             <strong>{money(subtotal)}</strong>
           </div>
           <div className="checkout-total">
             <span>Envío</span>
             <strong>Por coordinar</strong>
           </div>
-          <div className="checkout-grand-total">
-            <span>Total</span>
-            <strong>{money(subtotal)}</strong>
-          </div>
           <p className="checkout-note">
-            El costo de envío se coordinará según la dirección de entrega.
+            El total definitivo lo calcula el servidor al registrar el pedido.
           </p>
         </aside>
       </div>

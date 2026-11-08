@@ -4,16 +4,10 @@ import { useCart } from "./context/CartContext";
 import { getProductos } from "./services/productService";
 import { listar as listarCategorias } from "./services/categoriaService";
 import { useAuth } from "./context/AuthContext";
+import { formatMoney } from "./utils/formatters";
 
 const FALLBACK_IMAGE = "/product-placeholder.svg";
 const PAGE_SIZE = 8;
-
-const money = (value) =>
-  new Intl.NumberFormat("es-PE", {
-    style: "currency",
-    currency: "PEN",
-    maximumFractionDigits: 0,
-  }).format(value);
 
 function App() {
   const navigate = useNavigate();
@@ -200,6 +194,9 @@ function App() {
           {estaAutenticado ? (
             <>
               <span>{usuario.nombre}</span>
+              <Link className="login-button" to="/mis-pedidos">
+                Mis pedidos
+              </Link>
               <button className="login-button" type="button" onClick={logout}>
                 Cerrar sesión
               </button>
@@ -477,7 +474,7 @@ function App() {
                   <div className="product-bottom">
                     <div>
                       <strong className="product-price">
-                        {money(product.price)}
+                        {formatMoney(product.price)}
                       </strong>
 
                     </div>
@@ -687,7 +684,7 @@ function App() {
 
                       <div className="cart-item-info">
                         <strong>{item.name}</strong>
-                        <span>{money(item.price)}</span>
+                        <span>{formatMoney(item.price)}</span>
 
                         <div className="quantity-control">
                           <button
@@ -723,7 +720,7 @@ function App() {
                 <div className="cart-summary">
                   <div>
                     <span>Subtotal</span>
-                    <strong>{money(subtotal)}</strong>
+                    <strong>{formatMoney(subtotal)}</strong>
                   </div>
 
                   <div>
@@ -733,7 +730,7 @@ function App() {
 
                   <div className="cart-total">
                     <span>Total</span>
-                    <strong>{money(subtotal)}</strong>
+                    <strong>{formatMoney(subtotal)}</strong>
                   </div>
 
                   <button

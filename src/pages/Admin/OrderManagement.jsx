@@ -1,107 +1,131 @@
-
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
+import { ChevronDown, ChevronUp, Package, RefreshCw } from "lucide-react";
+import OrderStatusBadge from "../../components/orders/OrderStatusBadge";
 import {
-  Search,
-  Package,
-  Eye,
-  X,
-  ClipboardList,
-  RefreshCw,
-} from "lucide-react";
+  actualizarEstadoPedido,
+  listarPedidos,
+} from "../../services/pedidoService";
+import { formatDate, formatMoney } from "../../utils/formatters";
 
-const STORAGE_KEY = "tecorp_orders";
+const PAGE_SIZE = 10;
+const STATUSES = ["pendiente", "pagado", "enviado", "entregado", "cancelado"];
+const TRANSITIONS = {
+  pendiente: ["pagado", "cancelado"],
+  pagado: ["enviado", "cancelado"],
+  enviado: ["entregado"],
+  entregado: [],
+  cancelado: [],
+};
 
-const statuses = [
-  "Pendiente",
-  "Confirmado",
-  "En preparación",
-  "Enviado",
-  "Entregado",
-  "Cancelado",
-];
-
-const money = (value) =>
-  new Intl.NumberFormat("es-PE", {
-    style: "currency",
-    currency: "PEN",
-    maximumFractionDigits: 2,
-  }).format(Number(value) || 0);
-
-function readOrders() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    return Array.isArray(saved) ? saved : [];
-  } catch {
-    return [];
-  }
-}
-
-function formatDate(value) {
-  if (!value) return "Fecha no disponible";
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) return "Fecha no disponible";
-
-  return new Intl.DateTimeFormat("es-PE", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(date);
-}
+const statusLabel = (status) =>
+  status.charAt(0).toUpperCase() + status.slice(1);
 
 export default function OrderManagement() {
-  const [orders, setOrders] = useState(readOrders);
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("Todos");
-  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [orders, setOrders] = useState([]);
+  const [statusFilter, setStatusFilter] = useState("");
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [retryKey, setRetryKey] = useState(0);
+  const [expandedOrderId, setExpandedOrderId] = useState(null);
+  const [updatingOrderId, setUpdatingOrderId] = useState(null);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
-  }, [orders]);
+    let active = true;
 
-  const filteredOrders = useMemo(() => {
-    const term = search.trim().toLowerCase();
+    listarPedidos({
+      estado: statusFilter || undefined,
+      pagina: page,
+      limite: PAGE_SIZE,
+    })
+      .then((response) => {
+        if (!active) return;
+        setOrders(Array.isArray(response.datos) ? response.datos : []);
+        setTotal(Number(response.total) || 0);
+        setPages(Math.max(1, Number(response.paginas) || 1));
+      })
+      .catch((requestError) => {
+        if (!active) return;
+        setOrders([]);
+        setError(
+          requestError.status === 403
+            ? "No tienes permisos para gestionar pedidos."
+            : requestError.message || "No se pudieron cargar los pedidos."
+        );
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
 
-    return orders.filter((order) => {
-      const customer = order.customer || {};
+    return () => {
+      active = false;
+    };
+  }, [statusFilter, page, retryKey]);
 
-      const matchesSearch =
-        !term ||
-        String(order.id || "").toLowerCase().includes(term) ||
-        String(customer.fullName || "").toLowerCase().includes(term) ||
-        String(customer.email || "").toLowerCase().includes(term);
-
-      const matchesStatus =
-        statusFilter === "Todos" ||
-        (order.status || "Pendiente") === statusFilter;
-
-      return matchesSearch && matchesStatus;
-    });
-  }, [orders, search, statusFilter]);
-
-  const totalSales = orders
-    .filter((order) => order.status !== "Cancelado")
-    .reduce((total, order) => total + Number(order.total || 0), 0);
-
-  function updateStatus(orderId, newStatus) {
-    const updatedOrders = orders.map((order) =>
-      String(order.id) === String(orderId)
-        ? { ...order, status: newStatus }
-        : order
-    );
-
-    setOrders(updatedOrders);
-
-    if (
-      selectedOrder &&
-      String(selectedOrder.id) === String(orderId)
-    ) {
-      setSelectedOrder({ ...selectedOrder, status: newStatus });
-    }
+  function reload() {
+    setLoading(true);
+    setError("");
+    setNotice("");
+    setRetryKey((value) => value + 1);
   }
 
-  function refreshOrders() {
-    setOrders(readOrders());
+  function changeFilter(event) {
+    setLoading(true);
+    setError("");
+    setExpandedOrderId(null);
+    setPage(1);
+    setStatusFilter(event.target.value);
+  }
+
+  function goToPage(nextPage) {
+    setLoading(true);
+    setError("");
+    setExpandedOrderId(null);
+    setPage(nextPage);
+  }
+
+  async function changeStatus(order, nextStatus) {
+    if (!nextStatus) return;
+
+    if (
+      nextStatus === "cancelado" &&
+      !window.confirm("¿Cancelar este pedido? Se devolverá el stock.")
+    ) {
+      return;
+    }
+
+    setUpdatingOrderId(order.id);
+    setError("");
+    setNotice("");
+
+    try {
+      const updatedOrder = await actualizarEstadoPedido(order.id, nextStatus);
+
+      setOrders((currentOrders) =>
+        currentOrders
+          .map((currentOrder) =>
+            String(currentOrder.id) === String(order.id)
+              ? updatedOrder
+              : currentOrder
+          )
+          .filter(
+            (currentOrder) =>
+              !statusFilter || currentOrder.estado === statusFilter
+          )
+      );
+      setNotice(`El pedido ${order.id} ahora está ${updatedOrder.estado}.`);
+    } catch (requestError) {
+      setError(
+        requestError.status === 403
+          ? "No tienes permisos para actualizar pedidos."
+          : requestError.message || "No se pudo actualizar el pedido."
+      );
+    } finally {
+      setUpdatingOrderId(null);
+    }
   }
 
   return (
@@ -113,11 +137,7 @@ export default function OrderManagement() {
           <p>Consulta las compras y actualiza el estado de cada pedido.</p>
         </div>
 
-        <button
-          type="button"
-          className="admin-refresh-button"
-          onClick={refreshOrders}
-        >
+        <button type="button" className="admin-refresh-button" onClick={reload}>
           <RefreshCw size={17} />
           Actualizar
         </button>
@@ -126,60 +146,55 @@ export default function OrderManagement() {
       <div className="admin-order-stats">
         <article className="admin-order-stat">
           <span>Pedidos registrados</span>
-          <strong>{orders.length}</strong>
-          <Package size={22} />
-        </article>
-
-        <article className="admin-order-stat">
-          <span>Pedidos pendientes</span>
-          <strong>
-            {orders.filter((order) => order.status === "Pendiente").length}
-          </strong>
-          <ClipboardList size={22} />
-        </article>
-
-        <article className="admin-order-stat">
-          <span>Ventas no canceladas</span>
-          <strong>{money(totalSales)}</strong>
+          <strong>{total}</strong>
           <Package size={22} />
         </article>
       </div>
 
       <div className="admin-orders-panel">
         <div className="admin-orders-toolbar">
-          <div className="admin-orders-search">
-            <Search size={18} />
-            <input
-              type="search"
-              placeholder="Buscar por pedido, cliente o correo..."
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-          </div>
-
+          <span>{total} pedidos</span>
           <select
             value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value)}
+            onChange={changeFilter}
             aria-label="Filtrar pedidos por estado"
           >
-            <option value="Todos">Todos los estados</option>
-            {statuses.map((status) => (
+            <option value="">Todos los estados</option>
+            {STATUSES.map((status) => (
               <option key={status} value={status}>
-                {status}
+                {statusLabel(status)}
               </option>
             ))}
           </select>
         </div>
 
-        {filteredOrders.length === 0 ? (
+        {notice && <p role="status" style={{ padding: "0 20px" }}>{notice}</p>}
+
+        {loading && (
+          <div className="admin-orders-empty" role="status">
+            <h2>Cargando pedidos...</h2>
+          </div>
+        )}
+
+        {!loading && error && (
+          <div className="admin-orders-empty" role="alert">
+            <h2>No se pudieron cargar los pedidos</h2>
+            <p>{error}</p>
+            <button type="button" className="primary-button" onClick={reload}>
+              Reintentar
+            </button>
+          </div>
+        )}
+
+        {!loading && !error && orders.length === 0 && (
           <div className="admin-orders-empty">
             <Package size={42} />
             <h2>No hay pedidos para mostrar</h2>
-            <p>
-              Cuando se registren compras desde la tienda, aparecerán aquí.
-            </p>
+            <p>No hay resultados para el estado seleccionado.</p>
           </div>
-        ) : (
+        )}
+
+        {!loading && !error && orders.length > 0 && (
           <div className="admin-orders-table-wrapper">
             <table className="admin-orders-table">
               <thead>
@@ -189,161 +204,124 @@ export default function OrderManagement() {
                   <th>Fecha</th>
                   <th>Total</th>
                   <th>Estado</th>
-                  <th>Detalle</th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
-
               <tbody>
-                {filteredOrders.map((order) => (
-                  <tr key={order.id}>
-                    <td>
-                      <strong>{order.id}</strong>
-                    </td>
-                    <td>
-                      <strong>{order.customer?.fullName || "Sin nombre"}</strong>
-                      <span>{order.customer?.email || "Sin correo"}</span>
-                    </td>
-                    <td>{formatDate(order.date)}</td>
-                    <td>
-                      <strong>{money(order.total)}</strong>
-                    </td>
-                    <td>
-                      <select
-                        className={`admin-status-select status-${(
-                          order.status || "Pendiente"
-                        )
-                          .toLowerCase()
-                          .replaceAll(" ", "-")}`}
-                        value={order.status || "Pendiente"}
-                        onChange={(event) =>
-                          updateStatus(order.id, event.target.value)
-                        }
-                        aria-label={`Estado del pedido ${order.id}`}
-                      >
-                        {statuses.map((status) => (
-                          <option key={status} value={status}>
-                            {status}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td>
-                      <button
-                        type="button"
-                        className="admin-order-detail-button"
-                        onClick={() => setSelectedOrder(order)}
-                        aria-label={`Ver pedido ${order.id}`}
-                      >
-                        <Eye size={17} />
-                        Ver
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {orders.map((order) => {
+                  const isExpanded = String(expandedOrderId) === String(order.id);
+                  const transitions = TRANSITIONS[order.estado] || [];
+                  const isUpdating = String(updatingOrderId) === String(order.id);
+
+                  return (
+                    <Fragment key={order.id}>
+                      <tr>
+                        <td><strong>{order.id}</strong></td>
+                        <td>
+                          <strong>{order.usuarios?.nombre || "Sin nombre"}</strong>
+                          <span>{order.usuarios?.email || "Sin correo"}</span>
+                        </td>
+                        <td>{formatDate(order.creado_en)}</td>
+                        <td><strong>{formatMoney(order.total)}</strong></td>
+                        <td><OrderStatusBadge estado={order.estado} /></td>
+                        <td>
+                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                            <button
+                              type="button"
+                              className="admin-order-detail-button"
+                              onClick={() =>
+                                setExpandedOrderId(isExpanded ? null : order.id)
+                              }
+                            >
+                              {isExpanded ? <ChevronUp size={17} /> : <ChevronDown size={17} />}
+                              {isExpanded ? "Ocultar" : "Ver"}
+                            </button>
+
+                            {transitions.length > 0 && (
+                              <select
+                                className="admin-status-select"
+                                value=""
+                                disabled={isUpdating}
+                                onChange={(event) => changeStatus(order, event.target.value)}
+                                aria-label={`Cambiar estado del pedido ${order.id}`}
+                              >
+                                <option value="">
+                                  {isUpdating ? "Actualizando..." : "Cambiar estado"}
+                                </option>
+                                {transitions.map((status) => (
+                                  <option key={status} value={status}>
+                                    {statusLabel(status)}
+                                  </option>
+                                ))}
+                              </select>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+
+                      {isExpanded && (
+                        <tr>
+                          <td colSpan="6">
+                            <div className="admin-order-customer">
+                              <h3>Datos del pedido</h3>
+                              <p><strong>Dirección:</strong> {order.direccion_envio}</p>
+                              <p><strong>Teléfono:</strong> {order.usuarios?.telefono || "No disponible"}</p>
+                            </div>
+                            <div className="admin-order-products">
+                              <h3>Productos</h3>
+                              {(order.detalle_pedido || []).map((item, index) => (
+                                <div
+                                  className="admin-order-product"
+                                  key={`${item.producto_id}-${index}`}
+                                >
+                                  <span>
+                                    {item.productos?.nombre || "Producto"} · {item.cantidad} ×{" "}
+                                    {formatMoney(item.precio_unitario)}
+                                  </span>
+                                  <strong>
+                                    {formatMoney(
+                                      Number(item.precio_unitario) * Number(item.cantidad)
+                                    )}
+                                  </strong>
+                                </div>
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         )}
-      </div>
 
-      {selectedOrder && (
-        <div
-          className="admin-order-modal-backdrop"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) {
-              setSelectedOrder(null);
-            }
-          }}
-        >
-          <section
-            className="admin-order-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="order-modal-title"
+        {!loading && !error && pages > 1 && (
+          <nav
+            aria-label="Paginación de pedidos"
+            style={{ display: "flex", gap: 8, padding: 20, justifyContent: "center" }}
           >
-            <div className="admin-order-modal-heading">
-              <div>
-                <span className="eyebrow">DETALLE DEL PEDIDO</span>
-                <h2 id="order-modal-title">{selectedOrder.id}</h2>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setSelectedOrder(null)}
-                aria-label="Cerrar detalle"
-                className="admin-order-close"
-              >
-                <X size={21} />
-              </button>
-            </div>
-
-            <div className="admin-order-customer">
-              <h3>Datos del cliente</h3>
-              <p>
-                <strong>Nombre:</strong>{" "}
-                {selectedOrder.customer?.fullName || "No disponible"}
-              </p>
-              <p>
-                <strong>Correo:</strong>{" "}
-                {selectedOrder.customer?.email || "No disponible"}
-              </p>
-              <p>
-                <strong>Teléfono:</strong>{" "}
-                {selectedOrder.customer?.phone || "No disponible"}
-              </p>
-              <p>
-                <strong>Dirección:</strong>{" "}
-                {selectedOrder.customer?.address || "No disponible"}
-              </p>
-              <p>
-                <strong>Distrito:</strong>{" "}
-                {selectedOrder.customer?.district || "No disponible"}
-              </p>
-              <p>
-                <strong>Fecha:</strong> {formatDate(selectedOrder.date)}
-              </p>
-              <p>
-                <strong>Pago:</strong>{" "}
-                {selectedOrder.paymentMethod || "No especificado"}
-              </p>
-              {selectedOrder.customer?.notes && (
-                <p>
-                  <strong>Indicaciones:</strong>{" "}
-                  {selectedOrder.customer.notes}
-                </p>
-              )}
-            </div>
-
-            <div className="admin-order-products">
-              <h3>Productos</h3>
-
-              {(selectedOrder.items || []).map((item) => (
-                <div className="admin-order-product" key={item.id}>
-                  <span>
-                    {item.name} × {item.quantity}
-                  </span>
-                  <strong>
-                    {money(Number(item.price || 0) * Number(item.quantity || 0))}
-                  </strong>
-                </div>
-              ))}
-            </div>
-
-            <div className="admin-order-modal-total">
-              <span>Total del pedido</span>
-              <strong>{money(selectedOrder.total)}</strong>
-            </div>
-
             <button
               type="button"
-              className="primary-button admin-order-modal-button"
-              onClick={() => setSelectedOrder(null)}
+              className="admin-refresh-button"
+              disabled={page <= 1}
+              onClick={() => goToPage(page - 1)}
             >
-              Cerrar detalle
+              Anterior
             </button>
-          </section>
-        </div>
-      )}
+            <span style={{ alignSelf: "center" }}>Página {page} de {pages}</span>
+            <button
+              type="button"
+              className="admin-refresh-button"
+              disabled={page >= pages}
+              onClick={() => goToPage(page + 1)}
+            >
+              Siguiente
+            </button>
+          </nav>
+        )}
+      </div>
     </section>
   );
 }

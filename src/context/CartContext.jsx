@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import {
   createContext,
   useCallback,
@@ -102,6 +103,26 @@ export function CartProvider({ children }) {
     setCart([]);
   }, []);
 
+  const syncCartProducts = useCallback((products) => {
+    setCart((current) =>
+      current.map((item) => {
+        const refreshedProduct = products.find(
+          (product) => String(product.id) === String(item.id)
+        );
+
+        if (!refreshedProduct) return item;
+
+        const refreshedStock = Number(refreshedProduct.stock);
+        const quantity =
+          Number.isFinite(refreshedStock) && refreshedStock > 0
+            ? Math.min(item.quantity, Math.floor(refreshedStock))
+            : item.quantity;
+
+        return { ...item, ...refreshedProduct, quantity };
+      })
+    );
+  }, []);
+
   const totalItems = useMemo(
     () => cart.reduce((total, item) => total + item.quantity, 0),
     [cart]
@@ -124,6 +145,7 @@ export function CartProvider({ children }) {
       removeFromCart,
       updateQuantity,
       clearCart,
+      syncCartProducts,
       totalItems,
       subtotal,
     }),
@@ -133,6 +155,7 @@ export function CartProvider({ children }) {
       removeFromCart,
       updateQuantity,
       clearCart,
+      syncCartProducts,
       totalItems,
       subtotal,
     ]

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -17,6 +17,7 @@ function groupDetails(details = []) {
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
   const [form, setForm] = useState({ email: "", password: "" });
   const [fieldErrors, setFieldErrors] = useState({});
@@ -55,7 +56,15 @@ export default function Login() {
         email: form.email.trim(),
         password: form.password,
       });
-      navigate(session.usuario.rol === "admin" ? "/admin" : "/", {
+      const requestedRoute = location.state?.from;
+      const destination =
+        typeof requestedRoute === "string" && requestedRoute.startsWith("/")
+          ? requestedRoute
+          : session.usuario.rol === "admin"
+            ? "/admin"
+            : "/";
+
+      navigate(destination, {
         replace: true,
       });
     } catch (requestError) {
