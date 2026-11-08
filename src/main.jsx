@@ -2,6 +2,7 @@
 import ReactDOM from "react-dom/client";
 import AppRouter from "./routes/AppRouter";
 import { CartProvider } from "./context/CartContext";
+import { AuthProvider } from "./context/AuthContext";
 
 // Estilos base
 import "./index.css";
@@ -25,8 +26,10 @@ import "./styles/admin/OrderManagement.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <CartProvider>
-      <AppRouter />
-    </CartProvider>
+    <AuthProvider>
+      <CartProvider>
+        <AppRouter />
+      </CartProvider>
+    </AuthProvider>
   </React.StrictMode>
 );

@@ -233,6 +233,7 @@ export default function Checkout() {
                       onClick={() =>
                         updateQuantity(item.id, item.quantity + 1)
                       }
+                      disabled={item.quantity >= Number(item.stock)}
                     >
                       <Plus size={14} />
                     </button>

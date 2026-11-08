@@ -1,63 +1,68 @@
-const STORAGE_KEY = "tecorp_products";
+import { apiRequest } from "./api";
 
-const initialProducts = [
-  {
-    id: 1,
-    name: "Laptop Lenovo IdeaPad",
-    category: "Laptops",
-    price: 2499,
-    stock: 12,
-  },
-  {
-    id: 2,
-    name: "Mouse Logitech G203",
-    category: "Accesorios",
-    price: 89,
-    stock: 25,
-  },
-  {
-    id: 3,
-    name: "Teclado Mecánico RGB",
-    category: "Accesorios",
-    price: 159,
-    stock: 8,
-  },
-  {
-    id: 4,
-    name: "Monitor Samsung 24 pulgadas",
-    category: "Monitores",
-    price: 699,
-    stock: 6,
-  },
-];
+export function mapProducto(producto) {
+  if (!producto) return null;
 
-export function getProducts() {
-  try {
-    const savedProducts = localStorage.getItem(STORAGE_KEY);
-
-    if (savedProducts !== null) {
-      const parsedProducts = JSON.parse(savedProducts);
-
-      if (Array.isArray(parsedProducts)) {
-        return parsedProducts;
-      }
-    }
-
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(initialProducts));
-
-    return initialProducts;
-  } catch (error) {
-    console.error("Error al cargar los productos:", error);
-    return initialProducts;
-  }
+  return {
+    ...producto,
+    name: producto.nombre,
+    category: producto.categorias?.nombre || "Sin categoría",
+    price: Number(producto.precio),
+    image: producto.imagen_url,
+    imagen: producto.imagen_url,
+    brand: producto.marca,
+    description: producto.descripcion,
+  };
 }
 
-export function saveProducts(products) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
-    return true;
-  } catch (error) {
-    console.error("Error al guardar los productos:", error);
-    return false;
-  }
+function mapRespuestaProducto(respuesta) {
+  return respuesta?.id ? mapProducto(respuesta) : respuesta;
+}
+
+export async function getProductos({ categoria, q, pagina, limite } = {}) {
+  const params = new URLSearchParams();
+
+  if (categoria) params.set("categoria", categoria);
+  if (q) params.set("q", q);
+  if (pagina !== undefined) params.set("pagina", pagina);
+  if (limite !== undefined) params.set("limite", limite);
+
+  const query = params.toString();
+  const respuesta = await apiRequest(`/productos${query ? `?${query}` : ""}`);
+
+  return {
+    ...respuesta,
+    datos: Array.isArray(respuesta?.datos)
+      ? respuesta.datos.map(mapProducto)
+      : [],
+  };
+}
+
+export async function getProducto(id) {
+  const producto = await apiRequest(`/productos/${encodeURIComponent(id)}`);
+  return mapProducto(producto);
+}
+
+export async function crearProducto(data) {
+  const respuesta = await apiRequest("/productos", {
+    method: "POST",
+    body: data,
+  });
+
+  return mapRespuestaProducto(respuesta);
+}
+
+export async function actualizarProducto(id, data) {
+  const respuesta = await apiRequest(`/productos/${encodeURIComponent(id)}`, {
+    method: "PUT",
+    body: data,
+  });
+
+  return mapRespuestaProducto(respuesta);
+}
+
+export async function eliminarProducto(id) {
+  return apiRequest(`/productos/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
 }

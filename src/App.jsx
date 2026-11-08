@@ -1,107 +1,12 @@
-import { useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "./context/CartContext";
+import { getProductos } from "./services/productService";
+import { listar as listarCategorias } from "./services/categoriaService";
+import { useAuth } from "./context/AuthContext";
 
-const products = [
-  {
-    id: 1,
-    name: "Laptop ASUS TUF Gaming F15",
-    category: "Laptops",
-    price: 3299,
-    oldPrice: 3699,
-    icon: "💻",
-    tag: "MÁS VENDIDO",
-    color: "purple",
-    description: "Intel Core i7 · RTX 4060 · 16 GB RAM",
-  },
-  {
-    id: 2,
-    name: "Monitor LG UltraGear 27”",
-    category: "Monitores",
-    price: 1099,
-    oldPrice: 1299,
-    icon: "🖥️",
-    tag: "OFERTA",
-    color: "blue",
-    description: "27 pulgadas · 144 Hz · Full HD",
-  },
-  {
-    id: 3,
-    name: "Teclado mecánico Redragon",
-    category: "Accesorios",
-    price: 189,
-    oldPrice: null,
-    icon: "⌨️",
-    tag: "POPULAR",
-    color: "orange",
-    description: "RGB · Switches mecánicos · USB",
-  },
-  {
-    id: 4,
-    name: "Mouse Logitech G502 HERO",
-    category: "Accesorios",
-    price: 159,
-    oldPrice: 199,
-    icon: "🖱️",
-    tag: "OFERTA",
-    color: "green",
-    description: "25K DPI · 11 botones programables",
-  },
-  {
-    id: 5,
-    name: "Audífonos HyperX Cloud II",
-    category: "Audio",
-    price: 299,
-    oldPrice: null,
-    icon: "🎧",
-    tag: "RECOMENDADO",
-    color: "pink",
-    description: "Sonido 7.1 · Micrófono desmontable",
-  },
-  {
-    id: 6,
-    name: "PC Gamer Ryzen 7",
-    category: "Computadoras",
-    price: 4199,
-    oldPrice: 4599,
-    icon: "🖥️",
-    tag: "OFERTA",
-    color: "cyan",
-    description: "Ryzen 7 · RTX 4060 · 32 GB RAM",
-  },
-  {
-    id: 7,
-    name: "SSD Kingston NV2 1TB",
-    category: "Componentes",
-    price: 279,
-    oldPrice: null,
-    icon: "💾",
-    tag: "ALTO RENDIMIENTO",
-    color: "blue",
-    description: "NVMe PCIe 4.0 · 3500 MB/s",
-  },
-  {
-    id: 8,
-    name: "Silla Gamer ergonómica",
-    category: "Accesorios",
-    price: 649,
-    oldPrice: 799,
-    icon: "🪑",
-    tag: "OFERTA",
-    color: "orange",
-    description: "Reclinable · Soporte lumbar · Premium",
-  },
-];
-
-const categories = [
-  "Todos",
-  "Laptops",
-  "Computadoras",
-  "Monitores",
-  "Componentes",
-  "Accesorios",
-  "Audio",
-];
+const FALLBACK_IMAGE = "/product-placeholder.svg";
+const PAGE_SIZE = 8;
 
 const money = (value) =>
   new Intl.NumberFormat("es-PE", {
@@ -112,6 +17,7 @@ const money = (value) =>
 
 function App() {
   const navigate = useNavigate();
+  const { usuario, estaAutenticado, logout } = useAuth();
 
   const {
     cart,
@@ -122,32 +28,114 @@ function App() {
     subtotal,
   } = useCart();
 
-  const [activeCategory, setActiveCategory] = useState("Todos");
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [activeCategory, setActiveCategory] = useState("");
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [pages, setPages] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [categoriesError, setCategoriesError] = useState("");
+  const [retryKey, setRetryKey] = useState(0);
+  const [categoriesRetryKey, setCategoriesRetryKey] = useState(0);
   const [cartOpen, setCartOpen] = useState(false);
   const [toast, setToast] = useState("");
+  const toastTimerRef = useRef(null);
 
-  const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
-      const matchesCategory =
-        activeCategory === "Todos" ||
-        product.category === activeCategory;
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setDebouncedSearch(search.trim());
+    }, 400);
 
-      const matchesSearch = `${product.name} ${product.category} ${product.description}`
-        .toLowerCase()
-        .includes(search.toLowerCase());
+    return () => window.clearTimeout(timer);
+  }, [search]);
 
-      return matchesCategory && matchesSearch;
-    });
-  }, [activeCategory, search]);
+  useEffect(() => {
+    let active = true;
+
+    async function loadCategories() {
+      setCategoriesError("");
+
+      try {
+        const data = await listarCategorias();
+        if (active) setCategories(Array.isArray(data) ? data : []);
+      } catch (requestError) {
+        if (active) {
+          setCategoriesError(
+            requestError.message || "No se pudieron cargar las categorías."
+          );
+        }
+      }
+    }
+
+    loadCategories();
+    return () => {
+      active = false;
+    };
+  }, [categoriesRetryKey]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadProducts() {
+      setLoading(true);
+      setError("");
+
+      try {
+        const response = await getProductos({
+          categoria: activeCategory || undefined,
+          q: debouncedSearch || undefined,
+          pagina: page,
+          limite: PAGE_SIZE,
+        });
+
+        if (!active) return;
+
+        setProducts(response.datos);
+        setTotal(Number(response.total) || 0);
+        setPages(Math.max(1, Number(response.paginas) || 1));
+      } catch (requestError) {
+        if (!active) return;
+        setProducts([]);
+        setTotal(0);
+        setPages(1);
+        setError(requestError.message || "No se pudieron cargar los productos.");
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+
+    loadProducts();
+    return () => {
+      active = false;
+    };
+  }, [activeCategory, debouncedSearch, page, retryKey]);
+
+  useEffect(() => {
+    return () => window.clearTimeout(toastTimerRef.current);
+  }, []);
 
   function showToast(message) {
     setToast(message);
-    window.clearTimeout(window.toastTimer);
-    window.toastTimer = window.setTimeout(() => setToast(""), 2500);
+    window.clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = window.setTimeout(() => setToast(""), 2500);
   }
 
   function handleAddToCart(product) {
+    const currentItem = cart.find(
+      (item) => String(item.id) === String(product.id)
+    );
+
+    if (Number(product.stock) <= 0) return;
+
+    if (currentItem && currentItem.quantity >= Number(product.stock)) {
+      showToast(`No hay más stock disponible de ${product.name}`);
+      return;
+    }
+
     addToCart(product);
     showToast(`${product.name} agregado al carrito`);
   }
@@ -209,9 +197,18 @@ function App() {
             <span className="cart-count">{totalItems}</span>
           </button>
 
-          <Link className="login-button" to="/login">
-            Iniciar sesión
-          </Link>
+          {estaAutenticado ? (
+            <>
+              <span>{usuario.nombre}</span>
+              <button className="login-button" type="button" onClick={logout}>
+                Cerrar sesión
+              </button>
+            </>
+          ) : (
+            <Link className="login-button" to="/login">
+              Iniciar sesión
+            </Link>
+          )}
         </div>
       </header>
 
@@ -348,23 +345,40 @@ function App() {
             </div>
 
             <span className="product-total">
-              {filteredProducts.length} productos
+              {total} productos
             </span>
           </div>
 
           <div className="catalog-toolbar">
             <div className="category-list">
+              <button
+                className={
+                  activeCategory === ""
+                    ? "category-chip selected"
+                    : "category-chip"
+                }
+                onClick={() => {
+                  setActiveCategory("");
+                  setPage(1);
+                }}
+              >
+                Todos
+              </button>
+
               {categories.map((category) => (
                 <button
-                  key={category}
+                  key={category.id}
                   className={
-                    activeCategory === category
+                    String(activeCategory) === String(category.id)
                       ? "category-chip selected"
                       : "category-chip"
                   }
-                  onClick={() => setActiveCategory(category)}
+                  onClick={() => {
+                    setActiveCategory(category.id);
+                    setPage(1);
+                  }}
                 >
-                  {category}
+                  {category.nombre}
                 </button>
               ))}
             </div>
@@ -375,23 +389,71 @@ function App() {
                 type="search"
                 placeholder="Buscar productos..."
                 value={search}
-                onChange={(event) => setSearch(event.target.value)}
+                onChange={(event) => {
+                  setSearch(event.target.value);
+                  setPage(1);
+                }}
               />
             </label>
           </div>
 
+          {categoriesError && (
+            <div className="empty-results" role="alert">
+              <p>{categoriesError}</p>
+              <button
+                className="category-chip"
+                onClick={() => setCategoriesRetryKey((value) => value + 1)}
+              >
+                Reintentar categorías
+              </button>
+            </div>
+          )}
+
+          {loading && (
+            <div className="empty-results" role="status">
+              <h3>Cargando productos...</h3>
+              <p>Estamos preparando el catálogo.</p>
+            </div>
+          )}
+
+          {!loading && error && (
+            <div className="empty-results" role="alert">
+              <h3>No pudimos cargar los productos</h3>
+              <p>{error}</p>
+              <button
+                className="primary-button"
+                onClick={() => setRetryKey((value) => value + 1)}
+              >
+                Reintentar
+              </button>
+            </div>
+          )}
+
+          {!loading && !error && products.length > 0 && (
           <div className="product-grid">
-            {filteredProducts.map((product) => (
+            {products.map((product) => (
               <article className="product-card" key={product.id}>
-                <div className={`product-art ${product.color}`}>
-                  <span className="product-tag">{product.tag}</span>
-                  <span className="product-emoji">{product.icon}</span>
+                <div className="product-art blue">
+                  <span className="product-tag">
+                    {Number(product.stock) <= 0 ? "AGOTADO" : `${product.stock} EN STOCK`}
+                  </span>
+                  <img
+                    className="product-emoji"
+                    src={product.image || FALLBACK_IMAGE}
+                    alt={product.name}
+                    onError={(event) => {
+                      event.currentTarget.onerror = null;
+                      event.currentTarget.src = FALLBACK_IMAGE;
+                    }}
+                    style={{ width: "75%", height: "75%", objectFit: "contain" }}
+                  />
                   <span className="art-orbit" />
 
                   <button
                     className="quick-add"
                     onClick={() => handleAddToCart(product)}
                     aria-label={`Agregar ${product.name} al carrito`}
+                    disabled={Number(product.stock) <= 0}
                   >
                     +
                   </button>
@@ -402,7 +464,14 @@ function App() {
                     {product.category}
                   </span>
 
-                  <h3>{product.name}</h3>
+                  <h3>
+                    <Link
+                      to={`/producto/${product.id}`}
+                      style={{ color: "inherit", textDecoration: "none" }}
+                    >
+                      {product.name}
+                    </Link>
+                  </h3>
                   <p>{product.description}</p>
 
                   <div className="product-bottom">
@@ -411,24 +480,24 @@ function App() {
                         {money(product.price)}
                       </strong>
 
-                      {product.oldPrice && (
-                        <del>{money(product.oldPrice)}</del>
-                      )}
                     </div>
 
                     <button
                       className="add-button"
                       onClick={() => handleAddToCart(product)}
+                      disabled={Number(product.stock) <= 0}
                     >
-                      Agregar <span>+</span>
+                      {Number(product.stock) <= 0 ? "Agotado" : "Agregar"}
+                      {Number(product.stock) > 0 && <span>+</span>}
                     </button>
                   </div>
                 </div>
               </article>
             ))}
           </div>
+          )}
 
-          {filteredProducts.length === 0 && (
+          {!loading && !error && products.length === 0 && (
             <div className="empty-results">
               <span>🔎</span>
               <h3>No encontramos productos</h3>
@@ -440,12 +509,50 @@ function App() {
                 className="primary-button"
                 onClick={() => {
                   setSearch("");
-                  setActiveCategory("Todos");
+                  setActiveCategory("");
+                  setPage(1);
                 }}
               >
                 Ver todos los productos
               </button>
             </div>
+          )}
+
+          {!loading && !error && pages > 1 && (
+            <nav className="category-list" aria-label="Paginación del catálogo">
+              <button
+                className="category-chip"
+                disabled={page <= 1}
+                onClick={() => setPage((value) => Math.max(1, value - 1))}
+              >
+                Anterior
+              </button>
+
+              {Array.from({ length: pages }, (_, index) => index + 1).map(
+                (pageNumber) => (
+                  <button
+                    key={pageNumber}
+                    className={
+                      page === pageNumber
+                        ? "category-chip selected"
+                        : "category-chip"
+                    }
+                    onClick={() => setPage(pageNumber)}
+                    aria-current={page === pageNumber ? "page" : undefined}
+                  >
+                    {pageNumber}
+                  </button>
+                )
+              )}
+
+              <button
+                className="category-chip"
+                disabled={page >= pages}
+                onClick={() => setPage((value) => Math.min(pages, value + 1))}
+              >
+                Siguiente
+              </button>
+            </nav>
           )}
         </section>
 
@@ -566,8 +673,16 @@ function App() {
                 <div className="cart-items">
                   {cart.map((item) => (
                     <div className="cart-item" key={item.id}>
-                      <div className={`cart-item-art ${item.color}`}>
-                        {item.icon}
+                      <div className="cart-item-art blue">
+                        <img
+                          src={item.image || FALLBACK_IMAGE}
+                          alt=""
+                          onError={(event) => {
+                            event.currentTarget.onerror = null;
+                            event.currentTarget.src = FALLBACK_IMAGE;
+                          }}
+                          style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                        />
                       </div>
 
                       <div className="cart-item-info">
@@ -587,6 +702,7 @@ function App() {
                           <button
                             onClick={() => changeQuantity(item.id, 1)}
                             aria-label="Aumentar cantidad"
+                            disabled={item.quantity >= Number(item.stock)}
                           >
                             +
                           </button>

@@ -32,7 +32,13 @@ export function CartProvider({ children }) {
       return;
     }
 
-    const amount = Math.max(1, Number(quantity) || 1);
+    const amount = Math.max(1, Math.floor(Number(quantity) || 1));
+    const productStock = Number(product.stock);
+    const maximum = Number.isFinite(productStock)
+      ? Math.max(0, Math.floor(productStock))
+      : Infinity;
+
+    if (maximum === 0) return;
 
     setCart((current) => {
       const existing = current.find(
@@ -42,12 +48,19 @@ export function CartProvider({ children }) {
       if (existing) {
         return current.map((item) =>
           String(item.id) === String(product.id)
-            ? { ...item, quantity: item.quantity + amount }
+            ? {
+                ...item,
+                ...product,
+                quantity: Math.min(item.quantity + amount, maximum),
+              }
             : item
         );
       }
 
-      return [...current, { ...product, quantity: amount }];
+      return [
+        ...current,
+        { ...product, quantity: Math.min(amount, maximum) },
+      ];
     });
   }, []);
 
@@ -67,11 +80,21 @@ export function CartProvider({ children }) {
         );
       }
 
-      return current.map((item) =>
-        String(item.id) === String(productId)
-          ? { ...item, quantity: Math.floor(amount) }
-          : item
-      );
+      return current.map((item) => {
+        if (String(item.id) !== String(productId)) return item;
+
+        const itemStock = Number(item.stock);
+        const maximum = Number.isFinite(itemStock)
+          ? Math.max(0, Math.floor(itemStock))
+          : Infinity;
+
+        if (maximum === 0) return item;
+
+        return {
+          ...item,
+          quantity: Math.min(Math.floor(amount), maximum),
+        };
+      });
     });
   }, []);
 
