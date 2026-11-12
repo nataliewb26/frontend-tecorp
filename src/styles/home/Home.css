@@ -569,10 +569,13 @@
   overflow: hidden;
 }
 
+/* [SIN USO] Variantes de color sin referencia; las tarjetas actuales usan blue.
 .product-art.purple,
 .cart-item-art.purple { background: linear-gradient(135deg, #e8e4fb, #d4d5f6); }
+*/
 .product-art.blue,
 .cart-item-art.blue { background: linear-gradient(135deg, #dceafa, #c5e5f3); }
+/* [SIN USO] Variantes de color sin referencia; las tarjetas actuales usan blue.
 .product-art.orange,
 .cart-item-art.orange { background: linear-gradient(135deg, #f9e9d8, #f4d8c5); }
 .product-art.green,
@@ -581,6 +584,7 @@
 .cart-item-art.pink { background: linear-gradient(135deg, #f5e2ed, #e9d6e9); }
 .product-art.cyan,
 .cart-item-art.cyan { background: linear-gradient(135deg, #d8f1f2, #c9e7ef); }
+*/
 
 .product-tag {
   padding: 5px 7px;

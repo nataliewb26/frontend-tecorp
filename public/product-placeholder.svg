@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" role="img" aria-labelledby="title description">
+  <title id="title">Imagen de producto no disponible</title>
+  <desc id="description">Marcador de posición de TECORP Store</desc>
+  <rect width="640" height="400" rx="24" fill="#eef2ff"/>
+  <rect x="210" y="95" width="220" height="145" rx="12" fill="#c7d2fe" stroke="#4f46e5" stroke-width="10"/>
+  <path d="M170 270h300l-35 38H205z" fill="#4f46e5"/>
+  <text x="320" y="180" text-anchor="middle" font-family="Arial, sans-serif" font-size="42" font-weight="700" fill="#312e81">TECORP</text>
+  <text x="320" y="350" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" fill="#3730a3">Imagen no disponible</text>
+</svg>

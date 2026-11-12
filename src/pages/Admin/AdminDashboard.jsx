@@ -20,8 +20,8 @@ const modules = [
     title: "Categorías",
     description: "Organizar las categorías de la tienda.",
     icon: Tags,
-    path: "/admin/productos",
-    action: "Ver catálogo",
+    path: "/admin/categorias",
+    action: "Gestionar categorías",
   },
   {
     title: "Pedidos",

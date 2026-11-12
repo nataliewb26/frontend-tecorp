@@ -129,8 +129,9 @@
   color: #dc2626;
 }
 
-.checkout-total,
-.checkout-grand-total {
+/* [SIN USO] Selector checkout-grand-total sin referencia; checkout-total sigue activo. */
+/* .checkout-grand-total, */
+.checkout-total {
   display: flex;
   justify-content: space-between;
   gap: 12px;
@@ -138,12 +139,14 @@
   color: #475569;
 }
 
+/* [SIN USO] Regla checkout-grand-total sin referencia en Checkout.jsx.
 .checkout-grand-total {
   padding-top: 17px;
   border-top: 1px solid #e2e8f0;
   color: #111827;
   font-size: 1.15rem;
 }
+*/
 
 .checkout-note {
   margin-top: 16px;
@@ -156,6 +159,7 @@
   font-size: 0.9rem;
 }
 
+/* [SIN USO] Estado vacío no renderizado; el carrito vacío redirige al catálogo.
 .empty-checkout {
   text-align: center;
 }
@@ -168,6 +172,7 @@
   margin-bottom: 22px;
   color: #64748b;
 }
+*/
 
 /* CONFIRMACIÓN DEL PEDIDO */
 .confirmation-card {

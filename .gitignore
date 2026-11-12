@@ -1,4 +1,6 @@
 # Logs
+
+
 logs
 *.log
 npm-debug.log*
@@ -7,10 +9,12 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+.env
 node_modules
 dist
 dist-ssr
 *.local
+src/App.jsx.respaldo-20261106-154844
 
 # Editor directories and files
 .vscode/*
@@ -22,3 +26,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+
+echo ".env" >> .gitignore
