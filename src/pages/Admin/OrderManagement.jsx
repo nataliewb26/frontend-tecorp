@@ -1,11 +1,21 @@
 import { Fragment, useEffect, useState } from "react";
-import { ChevronDown, ChevronUp, Package, RefreshCw } from "lucide-react";
+import { Link } from "react-router-dom";
+import {
+  ArrowLeft,
+  ChevronDown,
+  ChevronUp,
+  Package,
+  RefreshCw,
+} from "lucide-react";
 import OrderStatusBadge from "../../components/orders/OrderStatusBadge";
 import {
   actualizarEstadoPedido,
   listarPedidos,
 } from "../../services/pedidoService";
-import { formatDate, formatMoney } from "../../utils/formatters";
+import {
+  formatDate,
+  formatMoneyWithCents as formatMoney,
+} from "../../utils/formatters";
 
 const PAGE_SIZE = 10;
 const STATUSES = ["pendiente", "pagado", "enviado", "entregado", "cancelado"];
@@ -129,41 +139,80 @@ export default function OrderManagement() {
   }
 
   return (
-    <section className="admin-orders">
-      <div className="admin-orders-heading">
-        <div>
-          <span className="eyebrow">TECORP STORE / ADMINISTRACIÓN</span>
-          <h1>Gestión de pedidos</h1>
-          <p>Consulta las compras y actualiza el estado de cada pedido.</p>
-        </div>
+  <section className="admin-page admin-orders">
+    <Link to="/admin" className="admin-orders-back">
+      <ArrowLeft size={17} />
+      Volver al panel
+    </Link>
 
-        <button type="button" className="admin-refresh-button" onClick={reload}>
-          <RefreshCw size={17} />
-          Actualizar
-        </button>
+    <div className="admin-orders-heading">
+      <div>
+        <span className="eyebrow">
+          TECORP STORE / ADMINISTRACIÓN
+        </span>
+
+        <h1>Gestión de pedidos</h1>
+
+        <p>
+          Consulta las compras y actualiza el estado
+          de cada pedido.
+        </p>
       </div>
 
-      <div className="admin-order-stats">
-        <article className="admin-order-stat">
-          <span>Pedidos registrados</span>
-          <strong>{total}</strong>
-          <Package size={22} />
-        </article>
-      </div>
+      <button
+        type="button"
+        className="admin-refresh-button"
+        onClick={reload}
+        disabled={loading}
+      >
+        <RefreshCw
+          size={17}
+          className={loading ? "admin-refresh-spin" : ""}
+        />
+        {loading ? "Actualizando..." : "Actualizar"}
+      </button>
+    </div>
+
+    <div className="admin-order-stats">
+  <article className="admin-order-stat">
+    <div className="admin-order-stat-icon">
+      <Package size={24} />
+    </div>
+
+    <div className="admin-order-stat-content">
+      <span>
+        {statusFilter
+          ? `Pedidos: ${statusLabel(statusFilter)}`
+          : "Pedidos registrados"}
+      </span>
+
+      <strong>{loading || error ? "—" : total}</strong>
+
+      <p>
+        {statusFilter
+          ? "Resultados del estado seleccionado"
+          : "Total de pedidos en el sistema"}
+      </p>
+    </div>
+  </article>
+</div>
 
       <div className="admin-orders-panel">
         <div className="admin-orders-toolbar">
-          <span>{total} pedidos</span>
-          <select
-            value={statusFilter}
-            onChange={changeFilter}
-            aria-label="Filtrar pedidos por estado"
-          >
+          <div className="admin-orders-table-heading">
+            <h2>Listado de pedidos</h2>
+            <p>
+              {loading
+                ? "Cargando pedidos..."
+                : error
+                  ? "No se pudieron consultar los pedidos"
+                  : `${total} ${total === 1 ? "pedido encontrado" : "pedidos encontrados"}`}
+            </p>
+          </div>
+          <select value={statusFilter} onChange={changeFilter} aria-label="Filtrar pedidos por estado">
             <option value="">Todos los estados</option>
             {STATUSES.map((status) => (
-              <option key={status} value={status}>
-                {statusLabel(status)}
-              </option>
+              <option key={status} value={status}>{statusLabel(status)}</option>
             ))}
           </select>
         </div>

@@ -10,6 +10,7 @@ import AdminDashboard from "../pages/Admin/AdminDashboard";
 import ProductManagement from "../pages/Admin/ProductManagement";
 import OrderManagement from "../pages/Admin/OrderManagement";
 import CategoryManagement from "../pages/Admin/CategoryManagement";
+import CustomerManagement from "../pages/Admin/CustomerManagement";
 import MyOrders from "../pages/Checkout/MyOrders";
 import { useAuth } from "../context/AuthContext";
 
@@ -54,12 +55,13 @@ export default function AppRouter() {
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/mis-pedidos" element={<MyOrders />} />
           </Route>
-          <Route element={<AdminRoute />}>
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/productos" element={<ProductManagement />} />
-            <Route path="/admin/categorias" element={<CategoryManagement />} />
-            <Route path="/admin/pedidos" element={<OrderManagement />} />
-          </Route>
+        <Route element={<AdminRoute />}>
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/productos" element={<ProductManagement />} />
+          <Route path="/admin/categorias" element={<CategoryManagement />} />
+          <Route path="/admin/pedidos" element={<OrderManagement />} />
+          <Route path="/admin/clientes" element={<CustomerManagement />} />
+        </Route>
         </Route>
 
         <Route path="*" element={<main style={{ padding: 40 }}>Página no encontrada.</main>} />

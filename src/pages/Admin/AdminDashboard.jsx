@@ -32,10 +32,10 @@ const modules = [
   },
   {
     title: "Clientes",
-    description: "Consultar información de clientes.",
+    description: "Consultar información de contacto de los clientes.",
     icon: Users,
-    path: "/admin",
-    action: "Próximamente",
+    path: "/admin/clientes",
+    action: "Consultar clientes",
   },
 ];
 
