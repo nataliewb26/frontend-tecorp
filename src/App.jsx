@@ -1,9 +1,9 @@
+import StoreNavbar from "./components/layout/StoreNavbar";
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useCart } from "./context/CartContext";
 import { getProductos } from "./services/productService";
 import { listar as listarCategorias } from "./services/categoriaService";
-import { useAuth } from "./context/AuthContext";
 import { formatMoney } from "./utils/formatters";
 
 const FALLBACK_IMAGE = "/product-placeholder.svg";
@@ -11,7 +11,16 @@ const PAGE_SIZE = 8;
 
 function App() {
   const navigate = useNavigate();
-  const { usuario, estaAutenticado, logout } = useAuth();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!location.hash) return;
+    const id = location.hash.slice(1);
+    const frame = window.requestAnimationFrame(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [location.hash, location.key]);
 
   const {
     cart,
@@ -161,53 +170,7 @@ function App() {
 
   return (
     <div className="store">
-      <div className="top-strip">
-        <span>⚡ TECNOLOGÍA PARA LLEGAR MÁS LEJOS</span>
-        <span>Envíos a todo el Perú · Compra segura</span>
-      </div>
-
-      <header className="header">
-        <Link className="brand" to="/" aria-label="TECORP STORE inicio">
-          <span className="brand-mark">T</span>
-          <span>
-            TECORP<span className="brand-light"> STORE</span>
-          </span>
-        </Link>
-
-        <nav className="main-nav">
-          <Link className="active" to="/">Inicio</Link>
-          <a href="#catalogo">Productos</a>
-          <a href="#beneficios">Nosotros</a>
-          <a href="#contacto">Contacto</a>
-        </nav>
-
-        <div className="header-actions">
-          <button
-            className="icon-button cart-trigger"
-            onClick={() => setCartOpen(true)}
-            aria-label={`Abrir carrito con ${totalItems} productos`}
-          >
-            <span>🛒</span>
-            <span className="cart-count">{totalItems}</span>
-          </button>
-
-          {estaAutenticado ? (
-            <>
-              <span>{usuario.nombre}</span>
-              <Link className="login-button" to="/mis-pedidos">
-                Mis pedidos
-              </Link>
-              <button className="login-button" type="button" onClick={logout}>
-                Cerrar sesión
-              </button>
-            </>
-          ) : (
-            <Link className="login-button" to="/login">
-              Iniciar sesión
-            </Link>
-          )}
-        </div>
-      </header>
+      <StoreNavbar onOpenCart={() => setCartOpen(true)} />
 
       <main>
         <section className="hero" id="inicio">
@@ -242,16 +205,16 @@ function App() {
 
             <div className="hero-stats">
               <div>
-                <strong>+500</strong>
-                <span>Productos</span>
+                <strong>Tech</strong>
+                <span>Productos seleccionados</span>
               </div>
               <div>
-                <strong>100%</strong>
-                <span>Calidad garantizada</span>
+                <strong>Perú</strong>
+                <span>Envíos nacionales</span>
               </div>
               <div>
-                <strong>24/7</strong>
-                <span>Compra online</span>
+                <strong>Online</strong>
+                <span>Compra desde donde estés</span>
               </div>
             </div>
           </div>
@@ -435,14 +398,13 @@ function App() {
                     {Number(product.stock) <= 0 ? "AGOTADO" : `${product.stock} EN STOCK`}
                   </span>
                   <img
-                    className="product-emoji"
+                    className="product-image"
                     src={product.image || FALLBACK_IMAGE}
                     alt={product.name}
                     onError={(event) => {
                       event.currentTarget.onerror = null;
                       event.currentTarget.src = FALLBACK_IMAGE;
                     }}
-                    style={{ width: "75%", height: "75%", objectFit: "contain" }}
                   />
                   <span className="art-orbit" />
 
@@ -516,7 +478,7 @@ function App() {
           )}
 
           {!loading && !error && pages > 1 && (
-            <nav className="category-list" aria-label="Paginación del catálogo">
+            <nav className="catalog-pagination" aria-label="Paginación del catálogo">
               <button
                 className="category-chip"
                 disabled={page <= 1}
